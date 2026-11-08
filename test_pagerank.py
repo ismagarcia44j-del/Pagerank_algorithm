@@ -1,5 +1,4 @@
 from pagerank import transition_model, sample_pagerank
-
 def test_transition_model():
     corpus = {
     "1.html": {"2.html"},

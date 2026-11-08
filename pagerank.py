@@ -2,6 +2,7 @@ import os
 import random
 import re
 import sys
+import copy
 
 DAMPING = 0.85
 SAMPLES = 10000
@@ -75,8 +76,8 @@ def transition_model(corpus, page, damping_factor):
             probab_distribution[link] = round(1/(len(corpus)),4)
 
     return probab_distribution
-         
 
+        
 def sample_pagerank(corpus, damping_factor, n):
     """
     Return PageRank values for each page by sampling `n` pages
@@ -86,14 +87,21 @@ def sample_pagerank(corpus, damping_factor, n):
     their estimated PageRank value (a value between 0 and 1). All
     PageRank values should sum to 1.
     """
-    # Choose randomly a page and dave it in samples
-    samples = [random.choice(corpus)]
+    # Choose randomly a page and save it in samples
+    samples = [random.choice(list(corpus.keys()))]
+    page_rank = dict()
     # Yield transition model for the next sample
     while len(samples) < n:
         probab_distribution = transition_model(corpus, samples[-1], damping_factor)
         pages = list(probab_distribution.keys())
         weights = list(probab_distribution.values())
-        selected_page = random.choices(pages, weights, k = 1)
+        selected_page = str(random.choices(pages, weights, k = 1)[0])
+        samples.append(selected_page)
+
+    for page in corpus:
+        page_rank[page] = samples.count(page)/n
+
+    return page_rank
 
 def iterate_pagerank(corpus, damping_factor):
     """
@@ -104,7 +112,30 @@ def iterate_pagerank(corpus, damping_factor):
     their estimated PageRank value (a value between 0 and 1). All
     PageRank values should sum to 1.
     """
-    raise NotImplementedError
+
+    # Assigning default probability to each page
+    new_pagerank = dict()
+    for key in corpus:
+        new_pagerank [key] = 1/len(corpus)
+    # Defining the numerator of PR(p)
+    numerator = 0
+    difference = True
+
+    # Iterate until difference of new-last are <=0.001
+    while difference:
+        last_pagerank= copy.deepcopy(new_pagerank)
+        for p in list(corpus): # PR(p)
+            # check if any page (i) in corpus is linking to p
+            for i,links in corpus.items():
+                links = corpus[i] or set(corpus) # corpus is true or all pages has the same P in i (is empty)
+                if p in links: # is p any page of i's links?
+                    numerator += last_pagerank[i]/len(links)
+                    # numerator = PR(i) / Numlinks(i)
+            # Computing PR(p)
+            new_pagerank[p] = ((1 - damping_factor)/len(corpus))+(damping_factor * numerator)
+            numerator = 0
+        difference = any(abs(new-last) > 0.001 for last,new in zip(last_pagerank.values(),new_pagerank.values()))
+    return new_pagerank # what will happen when I don't use zip in this case for last,new in last_pagerank.values(),new_pagerank.values()? 
 
 
 if __name__ == "__main__":
