@@ -1,4 +1,4 @@
-from pagerank import transition_model, sample_pagerank
+from pagerank import transition_model, sample_pagerank,iterate_pagerank
 def test_transition_model():
     corpus = {
     "1.html": {"2.html"},
@@ -35,3 +35,14 @@ def test_sample_pagerank():
 
     # By symmetry, Page 1 and Page 3 should be roughly equal
     assert abs(result["1.html"] - result["3.html"]) < 0.03
+
+def test_iterate_pagerank():
+    corpus = {
+        "1.html": {"2.html"},
+        "2.html": {"1.html", "3.html", "4.html"},
+        "3.html": {"2.html", "4.html"},
+        "4.html": {"2.html"},
+        }
+    damping_factor = 0.85
+    it_pr = iterate_pagerank(corpus, damping_factor)
+    assert sum(it_pr.values()) == 1

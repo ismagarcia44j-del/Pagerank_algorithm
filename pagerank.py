@@ -135,7 +135,7 @@ def iterate_pagerank(corpus, damping_factor):
             new_pagerank[p] = ((1 - damping_factor)/len(corpus))+(damping_factor * numerator)
             numerator = 0
         difference = any(abs(new-last) > 0.001 for last,new in zip(last_pagerank.values(),new_pagerank.values()))
-    return new_pagerank # what will happen when I don't use zip in this case for last,new in last_pagerank.values(),new_pagerank.values()? 
+    return new_pagerank 
 
 
 if __name__ == "__main__":
