@@ -12,9 +12,7 @@ def main():
     if len(sys.argv) != 2:
         sys.exit("Usage: python pagerank.py corpus")
     corpus = crawl(sys.argv[1])
-    ranks = sample_pagerank(corpus, DAMPING, SAMPLES) #estimate the PageRank of each page by sampling
-                                                      #it's true that return a dictionary where the 
-                                                      #     keys are each page name and the values are each pages estimated
+    ranks = sample_pagerank(corpus, DAMPING, SAMPLES)
     print(f"PageRank Results from Sampling (n = {SAMPLES})")
     for page in sorted(ranks):
         print(f"  {page}: {ranks[page]:.4f}")
@@ -60,24 +58,22 @@ def transition_model(corpus, page, damping_factor):
     linked to by `page`. With probability `1 - damping_factor`, choose
     a link at random chosen from all pages in the corpus.
     """
-    page_links = corpus[page]
-    #Yielding odds
-    corpus_links_odd = round((1-damping_factor)/len(corpus),4)
-    page_links_odd = round((damping_factor/len(page_links))+ corpus_links_odd,4)
     probab_distribution = dict()
-
-    for link in corpus:
-        if page_links_odd: # if page is not empty of links
-            if link in page_links:
+    if corpus[page]:  # if page has links inside
+        corpus_links_odd = (1-damping_factor)/len(corpus)  # overall odd for each link in corpus
+        # odd for links inside the page # it added corpus_links_odd because all corpus values pages are in corpus key pages
+        page_links_odd = (damping_factor/len(corpus[page])) + corpus_links_odd
+        for link in corpus:
+            if link in corpus[page]:  # if link belongs
                 probab_distribution[link] = page_links_odd
             else:
                 probab_distribution[link] = corpus_links_odd
-        else:
-            probab_distribution[link] = round(1/(len(corpus)),4)
-
+    else:  # if doesn't have ...
+        for link in corpus:
+            probab_distribution[link] = 1/(len(corpus))
     return probab_distribution
 
-        
+
 def sample_pagerank(corpus, damping_factor, n):
     """
     Return PageRank values for each page by sampling `n` pages
@@ -95,14 +91,13 @@ def sample_pagerank(corpus, damping_factor, n):
         probab_distribution = transition_model(corpus, samples[-1], damping_factor)
         pages = list(probab_distribution.keys())
         weights = list(probab_distribution.values())
-        selected_page = str(random.choices(pages, weights, k = 1)[0])
+        selected_page = str(random.choices(pages, weights, k=1)[0])
         samples.append(selected_page)
 
     for page in corpus:
         page_rank[page] = samples.count(page)/n
 
     return page_rank
-
 def iterate_pagerank(corpus, damping_factor):
     """
     Return PageRank values for each page by iteratively updating
@@ -116,26 +111,28 @@ def iterate_pagerank(corpus, damping_factor):
     # Assigning default probability to each page
     new_pagerank = dict()
     for key in corpus:
-        new_pagerank [key] = 1/len(corpus)
+        new_pagerank[key] = 1/len(corpus)
     # Defining the numerator of PR(p)
     numerator = 0
     difference = True
 
     # Iterate until difference of new-last are <=0.001
     while difference:
-        last_pagerank= copy.deepcopy(new_pagerank)
-        for p in list(corpus): # PR(p)
+        last_pagerank = copy.deepcopy(new_pagerank)
+        for p in list(corpus):  # PR(p)
             # check if any page (i) in corpus is linking to p
-            for i,links in corpus.items():
-                links = corpus[i] or set(corpus) # corpus is true or all pages has the same P in i (is empty)
-                if p in links: # is p any page of i's links?
+            for i, links in corpus.items():
+                # corpus is true or all pages has the same P in i (is empty)
+                links = corpus[i] or set(corpus)
+                if p in links:  # is p any page of i's links?
                     numerator += last_pagerank[i]/len(links)
                     # numerator = PR(i) / Numlinks(i)
             # Computing PR(p)
             new_pagerank[p] = ((1 - damping_factor)/len(corpus))+(damping_factor * numerator)
             numerator = 0
-        difference = any(abs(new-last) > 0.001 for last,new in zip(last_pagerank.values(),new_pagerank.values()))
-    return new_pagerank 
+        difference = any(abs(new-last) > 0.001 for last,
+                         new in zip(last_pagerank.values(), new_pagerank.values()))
+    return new_pagerank
 
 
 if __name__ == "__main__":

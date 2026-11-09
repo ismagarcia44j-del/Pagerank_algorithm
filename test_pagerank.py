@@ -10,10 +10,10 @@ def test_transition_model():
     page = "2.html"
 
     assert transition_model(corpus, "2.html", 0.85) == {
-            "1.html": 0.3208,
-            "2.html": 0.0375,
-            "3.html": 0.3208,
-            "4.html": 0.3208,
+            "1.html": 0.3208333333333333,
+            "2.html": 0.037500000000000006,
+            "3.html": 0.3208333333333333,
+            "4.html": 0.3208333333333333,
         }
 
 def test_sample_pagerank():
